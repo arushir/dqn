@@ -52,6 +52,8 @@ class DQN:
     """Learn on the mini batch"""
     #self.model.train_step(observation)
 
+    print len(self.memory)
+    print self.mini_batch_size
     if len(self.memory) > self.mini_batch_size:
       mini_batch = self.get_random_mini_batch()
 
@@ -59,20 +61,25 @@ class DQN:
       ys = []
 
       for sample in mini_batch:
-        q_values = self.model.predict(observation)
-
-        y_j = sample['reward']
+        y_j = np.zeros(self.num_actions)
+        y_j += sample['reward']
         # for nonterminals, add gamma*max_a(Q(phi_{j+1})) term
         if not sample['is_done']:
-          q_values = self.model.predict(new_observation)
+          q_values = self.model.predict(sample['new_observation'])
           # TODO: should this be max or argmax?
-          action = np.argmax(q_values)
+          action = np.max(q_values)
           y_j += self.gamma*action
 
+        observation = sample['observation']
         Xs.append(observation.copy())
-        ys.append(y_j)
+        ys.append(np.array(y_j))
 
-      model.train_step(Xs, ys)
+      Xs = np.array(Xs)
+      ys = np.array(ys)
+      print "Xs: ", Xs
+      print "ys: ", ys
+
+      self.model.train_step(Xs, ys)
 
 
 

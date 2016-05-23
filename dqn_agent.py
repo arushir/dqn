@@ -3,7 +3,7 @@ from utils import parse_args
 from dqn import DQN
 
 EPISODES = 5
-STEPS = 100
+STEPS = 1024
 
 def run_dqn(environment):
 	env = gym.make(environment)
@@ -18,9 +18,9 @@ def run_dqn(environment):
 	# TODO: get values from params
 	num_actions = 2
 	observation_shape = env.observation_space.shape
-	capacity = 4
+	capacity = 256
 	epsilon = 0.3
-	mini_batch_size = 128
+	mini_batch_size = 32
 	gamma = 0.4
 
 	dqn = DQN(num_actions, observation_shape, capacity, 
@@ -35,8 +35,7 @@ def run_dqn(environment):
 
 	    for t in range(STEPS):
 	        env.render()
-	        print "observation: "
-	        print observation
+	        #print observation
 
 	        # select action based on the model
 	        action = dqn.select_action(observation)
@@ -48,7 +47,7 @@ def run_dqn(environment):
 
 	        # train the model
 	        if num_steps > mini_batch_size:
-	        	dqn.train_step(observation)
+	        	dqn.train_step()
 
 	        if done:
 	            print "Episode finished after {} timesteps".format(t+1)
