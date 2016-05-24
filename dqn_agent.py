@@ -1,39 +1,27 @@
 import gym
-from utils import parse_args
+from params import parse_args
 from dqn import DQN
 
-EPISODES = 5
-STEPS = 1024
+def run_dqn():
+	# get command line arguments, defaults set in utils.py
+	agent_params, dqn_params, cnn_params = parse_args()
 
-def run_dqn(environment):
-	env = gym.make(environment)
-	# get command line arguments
-	# TODO: pass command line args for parameter tuning to cnn
-	# params = parse_args()
-
-	# TODO: how to get shape of action_space?
-	print env.action_space
-	print env.observation_space.shape
-
-	# TODO: get values from params
-	num_actions = 2
+	env = gym.make(agent_params['environment'])
+	episodes = agent_params['episodes']
+	steps = agent_params['steps']
+	num_actions = env.action_space.n
 	observation_shape = env.observation_space.shape
-	capacity = 256
-	epsilon = 0.3
-	mini_batch_size = 32
-	gamma = 0.4
 
-	dqn = DQN(num_actions, observation_shape, capacity, 
-                mini_batch_size, epsilon, gamma)
+	# initialize dqn learning
+	dqn = DQN(num_actions, observation_shape, dqn_params, cnn_params)
 
-
-	#env.monitor.start('/tmp/breakout-experiment-1')
+	env.monitor.start('/tmp/cartpole-experiment-1')
 	num_steps = 0
 
-	for i_episode in range(EPISODES):
+	for i_episode in range(episodes):
 	    observation = env.reset()
 
-	    for t in range(STEPS):
+	    for t in range(steps):
 	        env.render()
 	        #print observation
 
@@ -46,8 +34,7 @@ def run_dqn(environment):
 	        observation = new_observation
 
 	        # train the model
-	        if num_steps > mini_batch_size:
-	        	dqn.train_step()
+	        dqn.train_step()
 
 	        if done:
 	            print "Episode finished after {} timesteps".format(t+1)
@@ -55,7 +42,8 @@ def run_dqn(environment):
 
 	        num_steps += 1
 
-	#env.monitor.close()
+	env.monitor.close()
 
 if __name__ == '__main__':
-	run_dqn('CartPole-v0')
+	run_dqn()
+

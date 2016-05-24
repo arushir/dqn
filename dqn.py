@@ -7,18 +7,17 @@ from cnn import CNN
 # See https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf for model description
 
 class DQN:
-  def __init__(self, num_actions, observation_shape, capacity, 
-                mini_batch_size, epsilon, gamma, params ={}):
-    self.epsilon = epsilon
-    self.gamma = gamma
+  def __init__(self, num_actions, observation_shape, dqn_params, cnn_params):
     self.num_actions = num_actions
-    self.mini_batch_size = mini_batch_size
+    self.epsilon = dqn_params['epsilon']
+    self.gamma = dqn_params['gamma']
+    self.mini_batch_size = dqn_params['mini_batch_size']
 
     # memory 
-    self.memory = deque(maxlen=capacity)
+    self.memory = deque(maxlen=dqn_params['memory_capacity'])
 
     # initialize network
-    self.model = CNN(num_actions, observation_shape, params)
+    self.model = CNN(num_actions, observation_shape, cnn_params)
     print "model initialized"
 
   def select_action(self, observation):

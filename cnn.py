@@ -19,7 +19,7 @@ class CNN:
 
   """
 
-  def __init__(self, num_actions, observation_shape, params={}, verbose=True):
+  def __init__(self, num_actions, observation_shape, params={}, verbose=False):
     """
     Initialize the CNN model with a set of parameters.
 
