@@ -10,8 +10,18 @@ from keras.callbacks import History
 from keras.regularizers import l2, activity_l2
 from keras import optimizers
 
+import theano.tensor as T
+
 import numpy as np
 import logging
+
+def custom_loss(y_true, y_pred):
+  """ 
+  Custom loss funciton in Theano to correspond to the objective in 
+  the paper: https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf
+
+  """
+  return T.sqr(T.max(y_true) - T.max(y_pred))
 
 class CNN:
   """
@@ -32,10 +42,10 @@ class CNN:
     self.observation_shape = observation_shape
     logging.info('Initialized with params: {}'.format(params))
 
-    if 'lr' in params:
-      self.lr = params['lr']
-    else:
-      self.lr = 0.01
+    self.lr = params['lr']
+    self.reg = params['reg']
+    self.num_hidden = params['num_hidden']
+    self.hidden_size = params['hidden_size']
 
     self.model = self.create_model()
 
@@ -46,14 +56,22 @@ class CNN:
     """
 
     model = Sequential()
-    #model.add(Convolution2D(num_filters, input_shape=(self.observation_shape)))
-    model.add(Dense(self.num_actions, input_shape=self.observation_shape, bias=True))
-    #model.add(Activation("relu"))
+    for i in xrange(self.num_hidden):
+      if i == 0:
+        model.add(Dense(self.hidden_size, input_shape=self.observation_shape, W_regularizer=l2(self.reg), bias=True))
+      else:
+        model.add(Dense(self.hidden_size, W_regularizer=l2(self.reg), bias=True))
+      model.add(Activation("relu"))
+
+    if self.num_hidden == 0:
+      model.add(Dense(self.num_actions, input_shape=self.observation_shape, W_regularizer=l2(self.reg), bias=True))
+    else: 
+      model.add(Dense(self.num_actions, W_regularizer=l2(self.reg), bias=True))
     model.add(Activation("linear"))
+
     sgd = SGD(lr=self.lr)
 
-    #TODO: write custom loss function to match objective in paper
-    model.compile(loss='mean_squared_error', optimizer = sgd)
+    model.compile(loss=custom_loss, optimizer=sgd)
     return model
 
   def train_step(self, Xs, ys):
@@ -61,7 +79,7 @@ class CNN:
     Updates the CNN model with a mini batch of training examples.
 
     """
-    self.model.fit(Xs, ys, batch_size = 1, nb_epoch=1)
+    self.model.fit(Xs, ys, batch_size=len(Xs), nb_epoch=1, verbose=0)
 
   def predict(self, observation):
     """
