@@ -11,6 +11,8 @@ from keras.regularizers import l2, activity_l2
 from keras import optimizers
 
 import theano.tensor as T
+from theano import pp, printing
+import theano
 
 import numpy as np
 import logging
@@ -21,7 +23,12 @@ def custom_loss(y_true, y_pred):
   the paper: https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf
 
   """
-  return T.sqr(T.max(y_true) - T.max(y_pred))
+  idx = T.argmax(y_true, axis=1)
+  print(pp(idx))
+  printing.Print(idx)
+  printing.Print('idx')(idx)
+  return T.sqr(y_true[idx] - y_pred[idx])
+  #return T.sqr(T.max(y_true) - T.max(y_pred))
 
 class CNN:
   """
@@ -67,7 +74,7 @@ class CNN:
       model.add(Dense(self.num_actions, input_shape=self.observation_shape, W_regularizer=l2(self.reg), bias=True))
     else: 
       model.add(Dense(self.num_actions, W_regularizer=l2(self.reg), bias=True))
-    model.add(Activation("linear"))
+    model.add(Activation("relu"))
 
     sgd = SGD(lr=self.lr)
 
@@ -79,7 +86,12 @@ class CNN:
     Updates the CNN model with a mini batch of training examples.
 
     """
-    self.model.fit(Xs, ys, batch_size=len(Xs), nb_epoch=1, verbose=0)
+    print "IN TRAIN STEP"
+    print Xs
+    print ys
+    hist = self.model.fit(Xs, ys, batch_size=len(Xs), nb_epoch=1, verbose=0)
+    print(hist.history)['loss']
+    print "DONE"
 
   def predict(self, observation):
     """

@@ -5,10 +5,10 @@ DEFAULT_EPISODES = 2000
 DEFAULT_STEPS = 500
 DEFAULT_ENVIRONMENT = 'CartPole-v0'
 
-DEFAULT_MEMORY_CAPACITY = 256
-DEFAULT_EPSILON = 0.4
+DEFAULT_MEMORY_CAPACITY = 10000
+DEFAULT_EPSILON = 0.1
 DEFAULT_GAMMA = 0.9
-DEFAULT_MINI_BATCH_SIZE = 32
+DEFAULT_MINI_BATCH_SIZE = 10
 
 DEFAULT_LEARNING_RATE = 0.0001
 DEFAULT_REGULARIZATION = 0.01
@@ -39,6 +39,6 @@ def parse_args():
   args = parser.parse_args()
   agent_params = {'episodes': args.episodes, 'steps': args.steps, 'environment': args.env}
   dqn_params = {'memory_capacity': args.capacity, 'epsilon': args.epsilon, 'gamma': args.gamma, 'mini_batch_size': args.minibatch_size}
-  cnn_params = {'lr': args.l, 'reg': args.r, 'num_hidden': args.num_hidden, 'hidden_size': args.hidden_size}
+  cnn_params = {'lr': args.l, 'reg': args.r, 'num_hidden': args.num_hidden, 'hidden_size': args.hidden_size, 'mini_batch_size': args.minibatch_size}
 
   return agent_params, dqn_params, cnn_params

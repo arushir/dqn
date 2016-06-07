@@ -81,17 +81,26 @@ class DQN:
 
       for sample in mini_batch:
         y_j = np.zeros(self.num_actions)
-        y_j += sample['reward']
+        # make all y_j indices -infinity
+        y_j += -1000
+        # set the y_j index for the correct action to the correct value
+        y_j[sample['action']] = sample['reward']
 
-        # for nonterminals, add gamma*max_a(Q(phi_{j+1})) term
+        # for nonterminals, add gamma*max_a(Q(phi_{j+1})) term to y_j
         if not sample['is_done']:
           q_values = self.model.predict(sample['new_observation'])
           action = np.max(q_values)
-          y_j += self.gamma*action
+          y_j[sample['action']] += self.gamma*action
+
+          print "q_values: ", q_values
+          print "action reward: ", action
 
         observation = sample['observation']
         Xs.append(observation.copy())
-        ys.append(np.array(y_j))
+        ys.append(np.array(y_j).copy())
+
+        print "reward: ", sample['reward']
+        print y_j[sample['action']]
 
       Xs = np.array(Xs)
       ys = np.array(ys)
