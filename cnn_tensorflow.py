@@ -21,7 +21,7 @@ class CNN:
     self.num_actions = num_actions
 
     # TODO: observation shape will be a tuple
-    self.observation_shape = observation_shape
+    self.observation_shape = observation_shape[0]
     logging.info('Initialized with params: {}'.format(params))
 
     self.lr = params['lr']
@@ -58,12 +58,11 @@ class CNN:
     """
     # TODO: How to define a 3d observation shape
     input_placeholder = tf.placeholder(tf.float32, shape=(None, self.observation_shape))
-    # TODO: Are actions one-hot or labels?
     #labels_placeholder = tf.placeholder(tf.int32, shape=(None, self.num_actions))
-    labels_placeholder = tf.placeholder(tf.int32, shape=(None,))
+    labels_placeholder = tf.placeholder(tf.float32, shape=(None,))
+    actions_placeholder = tf.placeholder(tf.float32, shape=(None, self.num_actions))
 
-
-    return input_placeholder, labels_placeholder
+    return input_placeholder, labels_placeholder, actions_placeholder
 
 
   def nn(self, input_obs):
@@ -91,14 +90,23 @@ class CNN:
     The model definition.
 
     """
-    self.input_placeholder, self.labels_placeholder = self.add_placeholders()
+    self.input_placeholder, self.labels_placeholder, self.actions_placeholder = self.add_placeholders()
     outputs = self.nn(self.input_placeholder)
 
-    self.predictions = tf.nn.softmax(outputs)
-    self.cross_entropy_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(outputs, self.labels_placeholder))
+    self.predictions = outputs
+    #self.predictions = tf.nn.softmax(outputs)
 
-    optimizer = tf.train.AdamOptimizer(learning_rate = self.lr)
-    self.train_op = optimizer.minimize(self.cross_entropy_loss)
+    self.q_vals = tf.reduce_sum(tf.mul(self.predictions, self.actions_placeholder), 1)
+
+
+    #self.loss = tf.reduce_mean(tf.square(self.predictions - self.q_vals))
+    self.loss = tf.reduce_sum(tf.square(self.labels_placeholder - self.q_vals))
+
+
+    #optimizer = tf.train.AdamOptimizer(learning_rate = self.lr)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.lr)
+
+    self.train_op = optimizer.minimize(self.loss)
     init = tf.initialize_all_variables()
     #saver = tf.train.Saver()
     session = tf.Session()
@@ -106,30 +114,31 @@ class CNN:
 
     return session
 
-  def train_step(self, Xs, ys):
+  def train_step(self, Xs, ys, actions):
     """
     Updates the CNN model with a mini batch of training examples.
 
     """
-    loss, _, prediction_probs = self.session.run(
-      [self.cross_entropy_loss, self.train_op, self.predictions],
+
+    loss, _, prediction_probs, q_values = self.session.run(
+      [self.loss, self.train_op, self.predictions, self.q_vals],
       feed_dict = {self.input_placeholder: Xs,
                   self.labels_placeholder: ys,
+                  self.actions_placeholder: actions
                   })
 
 
-    loss, _, prediction_probs = self.session.run(
-      [self.cross_entropy_loss, self.train_op, self.predictions],
-      feed_dict = {self.input_placeholder: Xs,
-                  self.labels_placeholder: ys,
-                  })
+    # print "loss: ", loss
 
+    # print "prediction_probs: "
+    # print prediction_probs
 
-    print "loss: "
-    print loss
+    # print "actions: "
+    # print actions
 
-    print "prediction_probs: "
-    print prediction_probs
+    # print "q values: "
+    # print q_values
+
 
   def predict(self, observation):
     """
@@ -139,23 +148,17 @@ class CNN:
       observation: a numpy array of a single observation state
 
     """
-    print "observation length"
-    print len(observation)
 
     loss, prediction_probs = self.session.run(
-      [self.cross_entropy_loss, self.predictions],
+      [self.loss, self.predictions],
       feed_dict = {self.input_placeholder: observation,
                   self.labels_placeholder: np.zeros(len(observation)),
+                  self.actions_placeholder: np.zeros((len(observation), self.num_actions))
                   })
 
-    print "prediction probabilities: "
-    print prediction_probs
+    # print "prediction probabilities: "
+    # print prediction_probs
 
-    action = np.argmax(prediction_probs, axis = 1)
-
-    print "action: "
-    print action
-
-    return action
+    return prediction_probs
 
 

@@ -2,7 +2,7 @@ import numpy as np
 import random as random
 from collections import deque
 
-from cnn import CNN
+from cnn_tensorflow import CNN
 
 # See https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf for model description
 
@@ -34,8 +34,11 @@ class DQN:
       action = np.random.randint(0, self.num_actions)
     else:
       # select the action a which maximizes the Q value
-      q_values = self.model.predict(observation)
+      obs = np.array([observation])
+      q_values = self.model.predict(obs)
       action = np.argmax(q_values)
+
+    # print "action: ", action
     return action
 
   def update_state(self, action, observation, new_observation, reward, done):
@@ -62,10 +65,11 @@ class DQN:
     Gets a random sample of transitions from the replay memory.
 
     """
-    rand_idxs = random.sample(xrange(len(self.memory)), len(self.memory))
+    rand_idxs = random.sample(xrange(len(self.memory)), self.mini_batch_size)
     mini_batch = []
     for idx in rand_idxs:
       mini_batch.append(self.memory[idx])
+
     return mini_batch
 
   def train_step(self):
@@ -78,34 +82,37 @@ class DQN:
 
       Xs = []
       ys = []
+      actions = []
 
       for sample in mini_batch:
-        y_j = np.zeros(self.num_actions)
-        # make all y_j indices -infinity
-        y_j += -1000
-        # set the y_j index for the correct action to the correct value
-        y_j[sample['action']] = sample['reward']
+        y_j = sample['reward']
 
         # for nonterminals, add gamma*max_a(Q(phi_{j+1})) term to y_j
         if not sample['is_done']:
-          q_values = self.model.predict(sample['new_observation'])
-          action = np.max(q_values)
-          y_j[sample['action']] += self.gamma*action
+          new_observation = sample['new_observation']
+          new_obs = np.array([new_observation])
+          q_new_values = self.model.predict(new_obs)
+          action = np.max(q_new_values)
+          y_j += self.gamma*action
 
-          print "q_values: ", q_values
-          print "action reward: ", action
+        action = np.zeros(self.num_actions)
+        action[sample['action']] = 1
 
         observation = sample['observation']
-        Xs.append(observation.copy())
-        ys.append(np.array(y_j).copy())
 
-        print "reward: ", sample['reward']
-        print y_j[sample['action']]
+        Xs.append(observation.copy())
+        ys.append(y_j)
+        actions.append(action.copy())
+
+
+        # print "reward: ", sample['reward']
+        # print y_j
 
       Xs = np.array(Xs)
       ys = np.array(ys)
+      actions = np.array(actions)
 
-      self.model.train_step(Xs, ys)
+      self.model.train_step(Xs, ys, actions)
 
 
 

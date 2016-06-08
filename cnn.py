@@ -1,3 +1,5 @@
+# NOTE: loss function needs to be re-written to run with updated dqn.py
+
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
