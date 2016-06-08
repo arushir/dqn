@@ -15,6 +15,8 @@ DEFAULT_REGULARIZATION = 0.01
 DEFAULT_NUM_HIDDEN = 2 # not used in tensorflow implementation
 DEFAULT_HIDDEN_SIZE = 20
 
+DEFAULT_ID = 0
+
 def parse_args():
   """
   Parses the command line input.
@@ -24,6 +26,7 @@ def parse_args():
   parser.add_argument('-episodes', default = DEFAULT_EPISODES, help = 'number of episodes', type=int)
   parser.add_argument('-steps', default = DEFAULT_STEPS, help = 'number of steps', type=int)
   parser.add_argument('-env', default = DEFAULT_ENVIRONMENT, help = 'environment name', type=str)
+  parser.add_argument('-id', default = DEFAULT_ID, help = 'id number of run to append to output file name', type=str)
 
   parser.add_argument('-capacity', default = DEFAULT_MEMORY_CAPACITY, help = 'memory capacity', type=int)
   parser.add_argument('-epsilon', default = DEFAULT_EPSILON, help = 'epsilon value for the probability of taking a random action', type=float)
@@ -37,7 +40,10 @@ def parse_args():
 
 
   args = parser.parse_args()
-  agent_params = {'episodes': args.episodes, 'steps': args.steps, 'environment': args.env}
+
+  run_id = "lr_" + str(args.l) + "_reg_" + str(args.r) + "_h_" + str(args.hidden_size) + "_m_" + str(args.minibatch_size) + "_c_" + str(args.capacity) + "_id_" + str(args.id)
+
+  agent_params = {'episodes': args.episodes, 'steps': args.steps, 'environment': args.env, 'run_id': run_id}
   dqn_params = {'memory_capacity': args.capacity, 'epsilon': args.epsilon, 'gamma': args.gamma, 'mini_batch_size': args.minibatch_size}
   cnn_params = {'lr': args.l, 'reg': args.r, 'num_hidden': args.num_hidden, 'hidden_size': args.hidden_size, 'mini_batch_size': args.minibatch_size}
 

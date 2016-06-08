@@ -17,12 +17,15 @@ def run_dqn():
   # initialize dqn learning
   dqn = DQN(num_actions, observation_shape, dqn_params, cnn_params)
 
-  #env.monitor.start('./outputs/cartpole-experiment-1')
+  env.monitor.start('./outputs/cartpole-experiment-' + agent_params['run_id'])
   last_100 = deque(maxlen=100)
 
   for i_episode in range(episodes):
       observation = env.reset()
       reward_sum = 0
+
+      if np.mean(last_100) > 200:
+        break
 
       for t in range(steps):
           env.render()
@@ -48,7 +51,7 @@ def run_dqn():
               print "Average reward for last 100 episodes: ", np.mean(last_100)
               break
 
-  #env.monitor.close()
+  env.monitor.close()
 
 if __name__ == '__main__':
   run_dqn()

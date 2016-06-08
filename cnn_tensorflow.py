@@ -20,7 +20,7 @@ class CNN:
     self.verbose = verbose
     self.num_actions = num_actions
 
-    # TODO: observation shape will be a tuple
+    # observation shape will be a tuple
     self.observation_shape = observation_shape[0]
     logging.info('Initialized with params: {}'.format(params))
 
@@ -58,7 +58,6 @@ class CNN:
     """
     # TODO: How to define a 3d observation shape
     input_placeholder = tf.placeholder(tf.float32, shape=(None, self.observation_shape))
-    #labels_placeholder = tf.placeholder(tf.int32, shape=(None, self.num_actions))
     labels_placeholder = tf.placeholder(tf.float32, shape=(None,))
     actions_placeholder = tf.placeholder(tf.float32, shape=(None, self.num_actions))
 
@@ -117,7 +116,6 @@ class CNN:
 
     self.train_op = optimizer.minimize(self.loss)
     init = tf.initialize_all_variables()
-    #saver = tf.train.Saver()
     session = tf.Session()
     session.run(init)
 
