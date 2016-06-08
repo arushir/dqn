@@ -66,23 +66,35 @@ class CNN:
 
 
   def nn(self, input_obs):
-    with tf.name_scope("Layer") as scope:
-      Wshape = [self.observation_shape, self.hidden_size]
-      W = tf.get_variable("W", shape=Wshape,)
+    with tf.name_scope("Layer1") as scope:
+      W1shape = [self.observation_shape, self.hidden_size]
+      W1 = tf.get_variable("W1", shape=W1shape,)
       bshape = [1, self.hidden_size]
       b1 = tf.get_variable("b1", shape=bshape, initializer = tf.constant_initializer(0.0))
 
-    with tf.name_scope("Softmax") as scope:
+    with tf.name_scope("Layer2") as scope:
+      W2shape = [self.hidden_size, self.hidden_size]
+      W2 = tf.get_variable("W2", shape=W2shape,)
+      bshape = [1, self.hidden_size]
+      b2 = tf.get_variable("b2", shape=bshape, initializer = tf.constant_initializer(0.0))
+
+    with tf.name_scope("OutputLayer") as scope:
       Ushape = [self.hidden_size, self.num_actions]
       U = tf.get_variable("U", shape=Ushape)
-      b2shape = [1, self.num_actions]
-      b2 = tf.get_variable("b2", shape=b2shape, initializer = tf.constant_initializer(0.0))
+      b3shape = [1, self.num_actions]
+      b3 = tf.get_variable("b3", shape=b3shape, initializer = tf.constant_initializer(0.0))
 
-    xW = tf.matmul(input_obs, W)
+    xW = tf.matmul(input_obs, W1)
     h = tf.tanh(tf.add(xW, b1))
+
+    xW = tf.matmul(h, W2)
+    h = tf.tanh(tf.add(xW, b2))
+
     hU = tf.matmul(h, U)    
-    out = tf.add(hU, b2)
-    return out
+    out = tf.add(hU, b3)
+
+    reg = self.reg * (tf.reduce_sum(tf.square(W1)) + tf.reduce_sum(tf.square(W2)) + tf.reduce_sum(tf.square(U)))
+    return out, reg
 
 
   def create_model(self):
@@ -91,17 +103,14 @@ class CNN:
 
     """
     self.input_placeholder, self.labels_placeholder, self.actions_placeholder = self.add_placeholders()
-    outputs = self.nn(self.input_placeholder)
+    outputs, reg = self.nn(self.input_placeholder)
 
     self.predictions = outputs
     #self.predictions = tf.nn.softmax(outputs)
 
     self.q_vals = tf.reduce_sum(tf.mul(self.predictions, self.actions_placeholder), 1)
 
-
-    #self.loss = tf.reduce_mean(tf.square(self.predictions - self.q_vals))
-    self.loss = tf.reduce_sum(tf.square(self.labels_placeholder - self.q_vals))
-
+    self.loss = tf.reduce_sum(tf.square(self.labels_placeholder - self.q_vals)) + reg
 
     #optimizer = tf.train.AdamOptimizer(learning_rate = self.lr)
     optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.lr)
