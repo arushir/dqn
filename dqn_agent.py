@@ -11,6 +11,7 @@ def run_dqn():
   env = gym.make(agent_params['environment'])
   episodes = agent_params['episodes']
   steps = agent_params['steps']
+  steps_to_update = agent_params['steps_to_update']
   num_actions = env.action_space.n
   observation_shape = env.observation_space.shape
 
@@ -20,10 +21,12 @@ def run_dqn():
   env.monitor.start('./outputs/cartpole-experiment-' + agent_params['run_id'])
   last_100 = deque(maxlen=100)
 
+  total_steps = 0
   for i_episode in range(episodes):
       observation = env.reset()
       reward_sum = 0
 
+      # cartpole solved
       if np.mean(last_100) > 200:
         break
 
@@ -51,6 +54,11 @@ def run_dqn():
               print "Average reward for last 100 episodes: ", np.mean(last_100)
               break
 
+          if total_steps % steps_to_update == 0:
+            print "updating target network..."
+            dqn.update_target()
+
+          total_steps += 1
   env.monitor.close()
 
 if __name__ == '__main__':

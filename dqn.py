@@ -2,7 +2,7 @@ import numpy as np
 import random as random
 from collections import deque
 
-from cnn_tensorflow import CNN
+from cnn_target import CNNtarget
 
 # See https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf for model description
 
@@ -17,7 +17,7 @@ class DQN:
     self.memory = deque(maxlen=dqn_params['memory_capacity'])
 
     # initialize network
-    self.model = CNN(num_actions, observation_shape, cnn_params)
+    self.model = CNNtarget(num_actions, observation_shape, cnn_params)
     print "model initialized"
 
   def select_action(self, observation):
@@ -91,7 +91,7 @@ class DQN:
         if not sample['is_done']:
           new_observation = sample['new_observation']
           new_obs = np.array([new_observation])
-          q_new_values = self.model.predict(new_obs)
+          q_new_values = self.model.predict_target(new_obs)
           action = np.max(q_new_values)
           y_j += self.gamma*action
 
@@ -104,15 +104,19 @@ class DQN:
         ys.append(y_j)
         actions.append(action.copy())
 
-
-        # print "reward: ", sample['reward']
-        # print y_j
-
       Xs = np.array(Xs)
       ys = np.array(ys)
       actions = np.array(actions)
 
       self.model.train_step(Xs, ys, actions)
+
+  def update_target(self):
+    """
+    Updates the target network with weights from the trained network.
+
+    """
+    self.model.target_update_weights()
+
 
 
 
