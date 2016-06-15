@@ -44,61 +44,66 @@ class CNNtarget:
                          type tf.float32
 
     """
-    # Input placeholer of shape: [batch, in_height, in_width, in_channels]
-    input_placeholder = tf.placeholder(tf.float32, shape=(None, self.observation_shape, 1, self.num_observations))
+    input_placeholder = tf.placeholder(tf.float32, shape=(None, self.observation_shape * self.num_observations))
     labels_placeholder = tf.placeholder(tf.float32, shape=(None,))
     actions_placeholder = tf.placeholder(tf.float32, shape=(None, self.num_actions))
 
     return input_placeholder, labels_placeholder, actions_placeholder
 
 
-  # def nn(self, input_obs):
-  #   W1shape = [self.observation_shape, self.hidden_size]
-  #   W1 = tf.get_variable("W1", shape=W1shape)
-  #   bshape = [1, self.hidden_size]
-  #   b1 = tf.get_variable("b1", shape=bshape, initializer = tf.constant_initializer(0.0))
+  def nn(self, input_obs):
+    # Input layer
+    W_input_shape = [self.observation_shape * self.num_observations, self.hidden_size]
+    W_input = tf.get_variable("W_input", shape=W_input_shape)
+    b_shape = [1, self.hidden_size]
+    b_input = tf.get_variable("b_input", shape=b_shape, initializer = tf.constant_initializer(0.0))
 
-  #   W2shape = [self.hidden_size, self.hidden_size]
-  #   W2 = tf.get_variable("W2", shape=W2shape)
-  #   bshape = [1, self.hidden_size]
-  #   b2 = tf.get_variable("b2", shape=bshape, initializer = tf.constant_initializer(0.0))
+    xW = tf.matmul(input_obs, W_input)
+    h = tf.tanh(tf.add(xW, b_input))
 
-  #   Ushape = [self.hidden_size, self.num_actions]
-  #   U = tf.get_variable("U", shape=Ushape)
-  #   b3shape = [1, self.num_actions]
-  #   b3 = tf.get_variable("b3", shape=b3shape, initializer = tf.constant_initializer(0.0))
+    reg = tf.reduce_sum(tf.square(W_input))
 
-  #   xW = tf.matmul(input_obs, W1)
-  #   h = tf.tanh(tf.add(xW, b1))
+    W_shape = [self.hidden_size, self.hidden_size]
 
-  #   xW = tf.matmul(h, W2)
-  #   h = tf.tanh(tf.add(xW, b2))
+    for i in xrange(self.num_hidden):
+      W = tf.get_variable("W" + str(i), shape=W_shape)
+      b = tf.get_variable("b" + str(i), shape=b_shape, initializer = tf.constant_initializer(0.0))
 
-  #   hU = tf.matmul(h, U)    
-  #   out = tf.add(hU, b3)
+      xW = tf.matmul(h, W)
+      h = tf.tanh(tf.add(xW, b))
 
-  #   reg = self.reg * (tf.reduce_sum(tf.square(W1)) + tf.reduce_sum(tf.square(W2)) + tf.reduce_sum(tf.square(U)))
+      reg += tf.reduce_sum(tf.square(W))
+
+    W_output_shape = [self.hidden_size, self.num_actions]
+    W_output = tf.get_variable("W_output", shape=W_output_shape)
+    b_output_shape = [1, self.num_actions]
+    b_output = tf.get_variable("b_output", shape=b_output_shape, initializer = tf.constant_initializer(0.0))
+
+
+    hU = tf.matmul(h, W_output)    
+    out = tf.add(hU, b_output)
+
+    reg += tf.reduce_sum(tf.square(W_output))
+    reg = self.reg * reg
+
     return out, reg
 
-  def conv2d(self, x, W, stride):
-    return tf.nn.conv2d(x, W, strides = [1, stride, stride, 1], padding = "SAME")
+  # def conv2d(self, x, W, stride):
+  #   return tf.nn.conv2d(x, W, strides = [1, stride, stride, 1], padding = "SAME")
 
-  def cnn(self, input_obs):
-    print input_obs
+  # def cnn(self, input_obs):
+  #   # Input placeholer of shape: [batch, in_height, in_width, in_channels]
 
-    # W shape is [filter_height, filter_width, in_channels, output_channels]
-    W1shape = [2, 1, self.num_observations, self.num_actions]
-    W1 = tf.get_variable("W1", shape=W1shape)
-    bshape = [1, self.num_actions]
-    b1 = tf.get_variable("b1", shape=bshape, initializer = tf.constant_initializer(0.0))
+  #   # W shape is [filter_height, filter_width, in_channels, output_channels]
+  #   W1shape = [2, 1, self.num_observations, self.num_actions]
+  #   W1 = tf.get_variable("W1", shape=W1shape)
+  #   bshape = [1, self.num_actions]
+  #   b1 = tf.get_variable("b1", shape=bshape, initializer = tf.constant_initializer(0.0))
 
+  #   out = self.conv2d(input_obs, W1, 1) + b1
 
-    out = self.conv2d(input_obs, W1, 1) + b1
-
-    print out
-
-    reg = self.reg * (tf.reduce_sum(tf.square(W1)))
-    return out, reg 
+  #   reg = self.reg * (tf.reduce_sum(tf.square(W1)))
+  #   return out, reg 
 
 
   def create_model_trainable(self):
@@ -106,7 +111,7 @@ class CNNtarget:
     The model definition.
 
     """
-    outputs, reg = self.cnn(self.input_placeholder)
+    outputs, reg = self.nn(self.input_placeholder)
 
     self.predictions = outputs
 
@@ -114,8 +119,8 @@ class CNNtarget:
     self.loss = tf.reduce_sum(tf.square(self.labels_placeholder - self.q_vals)) + reg
 
     #optimizer = tf.train.AdamOptimizer(learning_rate = self.lr)
-    #optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.lr)
-    optimizer = tf.train.RMSPropOptimizer(learning_rate = self.lr)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate = self.lr)
+    # optimizer = tf.train.RMSPropOptimizer(learning_rate = self.lr)
 
     self.train_op = optimizer.minimize(self.loss)
 
@@ -124,7 +129,7 @@ class CNNtarget:
     The model definition for the target network.
 
     """
-    outputs, reg = self.cnn(self.input_placeholder)
+    outputs, reg = self.nn(self.input_placeholder)
 
     self.predictions_target = outputs
 
@@ -133,6 +138,14 @@ class CNNtarget:
     Creates the session.
 
     """
+    self.input_layer_mats = ["W_input", "b_input"]
+    self.hidden_layer_mats = []
+    for i in xrange(self.num_hidden):
+      self.hidden_layer_mats.append("W" + str(i))
+      self.hidden_layer_mats.append("b" + str(i))
+    self.output_layer_mats = ["W_output", "b_output"]
+
+    self.weight_mats = self.input_layer_mats + self.hidden_layer_mats + self.output_layer_mats
 
     with tf.variable_scope("network") as scope:
       self.create_model_trainable()
@@ -141,6 +154,9 @@ class CNNtarget:
       self.create_model_target()
 
     init = tf.initialize_all_variables()
+
+    # for var in tf.all_variables():
+    #   print var.name
 
     session = tf.Session()
     session.run(init)
@@ -208,9 +224,7 @@ class CNNtarget:
 
     """
 
-    weight_mats = ["W1", "b1", "W2", "b2", "U", "b3"]
-
-    for mat_name in weight_mats:
+    for mat_name in self.weight_mats:
       with tf.variable_scope("network", reuse=True):
         network_mat = tf.get_variable(mat_name)
 
