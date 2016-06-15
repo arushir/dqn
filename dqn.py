@@ -2,7 +2,7 @@ import numpy as np
 import random as random
 from collections import deque
 
-from cnn_target import CNNtarget
+from cnn_target import CNN
 
 # See https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf for model description
 

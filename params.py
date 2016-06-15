@@ -4,7 +4,7 @@ import argparse
 DEFAULT_EPISODES = 2000
 DEFAULT_STEPS = 500
 DEFAULT_STEPS_TO_UPDATE = 2000
-DEFAULT_ENVIRONMENT = 'CartPole-v0'
+DEFAULT_ENVIRONMENT = 'AirRaid-ram-v0'
 
 DEFAULT_MEMORY_CAPACITY = 10000
 DEFAULT_EPSILON = 0.1
@@ -15,6 +15,7 @@ DEFAULT_LEARNING_RATE = 0.0001
 DEFAULT_REGULARIZATION = 0.001
 DEFAULT_NUM_HIDDEN = 2 # not used in tensorflow implementation
 DEFAULT_HIDDEN_SIZE = 20
+DEFAULT_NUM_OBSERVATIONS = 4
 
 DEFAULT_ID = 0
 
@@ -39,6 +40,7 @@ def parse_args():
   parser.add_argument('-r', default = DEFAULT_REGULARIZATION, help = 'regularization', type=float)
   parser.add_argument('-num_hidden', default = DEFAULT_NUM_HIDDEN, help = 'the number of hidden layers in the deep network', type=int)
   parser.add_argument('-hidden_size', default = DEFAULT_HIDDEN_SIZE, help = 'the hidden size of all layers in the network', type=int)
+  parser.add_argument('-num_observations', default = DEFAULT_NUM_OBSERVATIONS, help = 'the number of observations to pass to the network', type=int)
 
 
   args = parser.parse_args()
@@ -47,6 +49,6 @@ def parse_args():
 
   agent_params = {'episodes': args.episodes, 'steps': args.steps, 'steps_to_update': args.update_every, 'environment': args.env, 'run_id': run_id}
   dqn_params = {'memory_capacity': args.capacity, 'epsilon': args.epsilon, 'gamma': args.gamma, 'mini_batch_size': args.minibatch_size}
-  cnn_params = {'lr': args.l, 'reg': args.r, 'num_hidden': args.num_hidden, 'hidden_size': args.hidden_size, 'mini_batch_size': args.minibatch_size}
+  cnn_params = {'lr': args.l, 'reg': args.r, 'num_hidden': args.num_hidden, 'hidden_size': args.hidden_size, 'mini_batch_size': args.minibatch_size, 'num_observations': args.num_observations}
 
   return agent_params, dqn_params, cnn_params

@@ -15,10 +15,13 @@ def run_dqn():
   num_actions = env.action_space.n
   observation_shape = env.observation_space.shape
 
+  print "num actions: ", num_actions
+  print "observation_shape: ", observation_shape
+
   # initialize dqn learning
   dqn = DQN(num_actions, observation_shape, dqn_params, cnn_params)
 
-  env.monitor.start('./outputs/cartpole-experiment-' + agent_params['run_id'])
+  # env.monitor.start('./outputs/cartpole-experiment-' + agent_params['run_id'])
   last_100 = deque(maxlen=100)
 
   total_steps = 0
@@ -27,8 +30,8 @@ def run_dqn():
       reward_sum = 0
 
       # cartpole solved
-      if np.mean(last_100) > 200:
-        break
+      # if np.mean(last_100) > 200 and total_steps > 100:
+      #   break
 
       for t in range(steps):
           env.render()
@@ -59,7 +62,7 @@ def run_dqn():
             dqn.update_target()
 
           total_steps += 1
-  env.monitor.close()
+  # env.monitor.close()
 
 if __name__ == '__main__':
   run_dqn()
