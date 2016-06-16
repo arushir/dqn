@@ -12,6 +12,7 @@ def run_dqn():
   episodes = agent_params['episodes']
   steps = agent_params['steps']
   steps_to_update = agent_params['steps_to_update']
+  skipping = agent_params['skipping'] 
   num_actions = env.action_space.n
   observation_shape = env.observation_space.shape
 
@@ -32,16 +33,24 @@ def run_dqn():
       for t in range(steps):
           env.render()
 
-          # select action based on the model
-          action = dqn.select_action(observation)
+          # Use the previous action if in a skipping frame
+          if total_steps % skipping == 0:
+            # select action based on the model
+            action = dqn.select_action(observation)
+
           # execute actin in emulator
           new_observation, reward, done, _ = env.step(action)
-          # update the state 
-          dqn.update_state(action, observation, new_observation, reward, done)
-          observation = new_observation
 
-          # train the model
-          dqn.train_step()
+          # Only update the network if not in a skipping frame
+
+          if total_steps % skipping == 0:
+            # update the state 
+            dqn.update_state(action, observation, new_observation, reward, done)
+         
+            # train the model
+            dqn.train_step()
+
+           observation = new_observation
 
           reward_sum += reward
           if done:

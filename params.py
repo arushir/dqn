@@ -5,6 +5,7 @@ DEFAULT_EPISODES = 2000
 DEFAULT_STEPS = 500
 DEFAULT_STEPS_TO_UPDATE = 2000
 DEFAULT_ENVIRONMENT = 'AirRaid-ram-v0'
+DEFAULT_SKIPPING_CONST = 4
 
 DEFAULT_MEMORY_CAPACITY = 10000
 DEFAULT_EPSILON = 0.1
@@ -30,6 +31,8 @@ def parse_args():
   parser.add_argument('-update_every', default = DEFAULT_STEPS_TO_UPDATE, help = 'number of steps before updating the target network', type=int)
   parser.add_argument('-env', default = DEFAULT_ENVIRONMENT, help = 'environment name', type=str)
   parser.add_argument('-id', default = DEFAULT_ID, help = 'id number of run to append to output file name', type=str)
+  parser.add_argument('-skipping', default = DEFAULT_SKIPPING_CONST, help = 'the number of frames to skip', type=int)
+
 
   parser.add_argument('-capacity', default = DEFAULT_MEMORY_CAPACITY, help = 'memory capacity', type=int)
   parser.add_argument('-epsilon', default = DEFAULT_EPSILON, help = 'epsilon value for the probability of taking a random action', type=float)
@@ -47,7 +50,7 @@ def parse_args():
 
   run_id = "lr_" + str(args.l) + "_reg_" + str(args.r) + "_h_" + str(args.hidden_size) + "_m_" + str(args.minibatch_size) + "_c_" + str(args.capacity) + "_id_" + str(args.id)
 
-  agent_params = {'episodes': args.episodes, 'steps': args.steps, 'steps_to_update': args.update_every, 'environment': args.env, 'run_id': run_id}
+  agent_params = {'episodes': args.episodes, 'steps': args.steps, 'steps_to_update': args.update_every, 'environment': args.env, 'run_id': run_id, 'skipping': args.skipping}
   dqn_params = {'memory_capacity': args.capacity, 'epsilon': args.epsilon, 'gamma': args.gamma, 'mini_batch_size': args.minibatch_size}
   cnn_params = {'lr': args.l, 'reg': args.r, 'num_hidden': args.num_hidden, 'hidden_size': args.hidden_size, 'mini_batch_size': args.minibatch_size, 'num_observations': args.num_observations}
 
