@@ -2,7 +2,7 @@ import numpy as np
 import random as random
 from collections import deque
 
-from cnn_target import CNN
+from cnn_target import CNNtarget
 
 # See https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf for model description
 
@@ -12,9 +12,12 @@ class DQN:
     self.epsilon = dqn_params['epsilon']
     self.gamma = dqn_params['gamma']
     self.mini_batch_size = dqn_params['mini_batch_size']
+    self.observation_shape = observation_shape[0]
+    self.num_observations = cnn_params['num_observations']
 
     # memory 
     self.memory = deque(maxlen=dqn_params['memory_capacity'])
+    self.observations = deque(maxlen=dqn_params['memory_capacity'])
 
     # initialize network
     self.model = CNNtarget(num_actions, observation_shape, cnn_params)
@@ -29,17 +32,56 @@ class DQN:
 
     """
 
+    # First get the observation history
+    obs_with_history = self.get_observation_history(observation)
+
     if random.random() < self.epsilon: 
       # with epsilon probability select a random action 
       action = np.random.randint(0, self.num_actions)
     else:
       # select the action a which maximizes the Q value
-      obs = np.array([observation])
+      obs = np.array([obs_with_history])
       q_values = self.model.predict(obs)
       action = np.argmax(q_values)
 
     # print "action: ", action
     return action
+
+  def get_observation_history(self, observation):
+    """
+    Takes an observation as input. Returns the observation with history.
+
+    Args:
+      observation: the raw current state
+
+    """
+    if len(self.observations) == 0:
+      obs = np.zeros(self.num_observations*self.observation_shape)
+      obs[-self.observation_shape:] = observation
+      self.observations.append(obs)
+    else:
+      obs = self.observations[-1]
+
+    return obs
+
+
+  def update_observation_history(self, new_observation):
+    """
+    Takes an observation as input. Updates the observation history with the latest observation.
+    Returns the new observation with history.
+
+    Args:
+      observation: the raw current state
+
+    """
+    new_obs = np.zeros(self.num_observations*self.observation_shape)
+    new_obs[:-self.observation_shape] = self.observations[- 1][self.observation_shape:]
+    new_obs[-self.observation_shape:] = new_observation
+
+    self.observations.append(new_obs)
+
+    return new_obs
+
 
   def update_state(self, action, observation, new_observation, reward, done):
     """
@@ -53,9 +95,12 @@ class DQN:
       done: a boolean for when the episode has terminated 
 
     """
+    obs_with_history = self.get_observation_history(observation)
+    new_obs_with_history = self.update_observation_history(new_observation)
+
     transition = {'action': action,
-                  'observation': observation,
-                  'new_observation': new_observation,
+                  'observation': obs_with_history,
+                  'new_observation': new_obs_with_history,
                   'reward': reward,
                   'is_done': done}
     self.memory.append(transition)

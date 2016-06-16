@@ -29,13 +29,8 @@ def run_dqn():
       observation = env.reset()
       reward_sum = 0
 
-      # cartpole solved
-      # if np.mean(last_100) > 200 and total_steps > 100:
-      #   break
-
       for t in range(steps):
           env.render()
-          #print observation
 
           # select action based on the model
           action = dqn.select_action(observation)
