@@ -53,6 +53,7 @@ def run_dqn():
           observation = new_observation
 
           reward_sum += reward
+
           if done:
               print "Episode ", i_episode
               print "Finished after {} timesteps".format(t+1)
