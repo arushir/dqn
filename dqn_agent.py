@@ -50,7 +50,7 @@ def run_dqn():
             # train the model
             dqn.train_step()
 
-           observation = new_observation
+          observation = new_observation
 
           reward_sum += reward
           if done:
