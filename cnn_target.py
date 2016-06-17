@@ -65,6 +65,7 @@ class CNNtarget:
 
     W_shape = [self.hidden_size, self.hidden_size]
 
+    # Hidden layers
     for i in xrange(self.num_hidden):
       W = tf.get_variable("W" + str(i), shape=W_shape)
       b = tf.get_variable("b" + str(i), shape=b_shape, initializer = tf.constant_initializer(0.0))
@@ -74,6 +75,7 @@ class CNNtarget:
 
       reg += tf.reduce_sum(tf.square(W))
 
+    # Output layer
     W_output_shape = [self.hidden_size, self.num_actions]
     W_output = tf.get_variable("W_output", shape=W_output_shape)
     b_output_shape = [1, self.num_actions]
@@ -155,9 +157,6 @@ class CNNtarget:
 
     init = tf.initialize_all_variables()
 
-    # for var in tf.all_variables():
-    #   print var.name
-
     session = tf.Session()
     session.run(init)
 
@@ -179,9 +178,6 @@ class CNNtarget:
                   self.labels_placeholder: np.zeros(len(observation)),
                   self.actions_placeholder: np.zeros((len(observation), self.num_actions))
                   })
-
-    # print "prediction probabilities: "
-    # print prediction_probs
 
     return prediction_probs
 

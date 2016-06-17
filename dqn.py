@@ -44,7 +44,6 @@ class DQN:
       q_values = self.model.predict(obs)
       action = np.argmax(q_values)
 
-    # print "action: ", action
     return action
 
   def get_observation_history(self, observation):

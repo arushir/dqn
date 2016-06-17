@@ -22,7 +22,7 @@ def run_dqn():
   # initialize dqn learning
   dqn = DQN(num_actions, observation_shape, dqn_params, cnn_params)
 
-  # env.monitor.start('./outputs/cartpole-experiment-' + agent_params['run_id'])
+  env.monitor.start('./outputs/experiment-' + agent_params['run_id'])
   last_100 = deque(maxlen=100)
 
   total_steps = 0
@@ -42,7 +42,6 @@ def run_dqn():
           new_observation, reward, done, _ = env.step(action)
 
           # Only update the network if not in a skipping frame
-
           if total_steps % skipping == 0:
             # update the state 
             dqn.update_state(action, observation, new_observation, reward, done)
@@ -67,7 +66,7 @@ def run_dqn():
             dqn.update_target()
 
           total_steps += 1
-  # env.monitor.close()
+  env.monitor.close()
 
 if __name__ == '__main__':
   run_dqn()
